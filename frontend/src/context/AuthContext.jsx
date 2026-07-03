@@ -2,21 +2,26 @@ import React, {
     createContext,
     useContext,
     useEffect,
-    useState
+    useState,
 } from "react";
 
-import {
-    onAuthStateChanged
-} from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
 import { auth } from "../services/firebase";
+
+import {
+    login,
+    signup,
+    logout,
+    loginWithGoogle,
+    resetPassword,
+} from "../services/authService";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
 
     const [user, setUser] = useState(null);
-
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -32,31 +37,21 @@ export const AuthProvider = ({ children }) => {
                     const token = await firebaseUser.getIdToken();
 
                     const data = {
-
                         email: firebaseUser.email,
-
                         uid: firebaseUser.uid,
-
-                        token
-
+                        token,
                     };
 
                     localStorage.setItem(
-
                         "echoUser",
-
                         JSON.stringify(data)
-
                     );
 
                     setUser(data);
 
-                }
-
-                else {
+                } else {
 
                     localStorage.removeItem("echoUser");
-
                     setUser(null);
 
                 }
@@ -71,19 +66,20 @@ export const AuthProvider = ({ children }) => {
 
     }, []);
 
+    const value = {
+        user,
+        loading,
+        login,
+        signup,
+        logout,
+        loginWithGoogle,
+        resetPassword,
+    };
+
     return (
-
-        <AuthContext.Provider
-            value={{
-                user,
-                loading
-            }}
-        >
-
+        <AuthContext.Provider value={value}>
             {children}
-
         </AuthContext.Provider>
-
     );
 
 };

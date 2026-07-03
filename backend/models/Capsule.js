@@ -1,75 +1,75 @@
 const mongoose = require("mongoose");
 
-const triggerSchema = new mongoose.Schema(
+const contentSchema = new mongoose.Schema(
     {
         type: {
             type: String,
-            enum: ["time", "api"],
-            required: true
+            enum: ["TEXT", "IMAGE", "AUDIO", "VIDEO", "DOCUMENT", "MIXED"],
         },
-
-        unlock_date: {
-            type: Date
-        },
-
-        api_endpoint: {
-            type: String
-        },
-
-        target_value: {
-            type: mongoose.Schema.Types.Mixed
-        },
-
-        condition_operator: {
-            type: String,
-            enum: [
-                "equals",
-                "greater_than",
-                "less_than",
-                "contains"
-            ]
-        }
+        text: String,
     },
+    { _id: false }
+);
+
+const deliveryConditionSchema = new mongoose.Schema(
     {
-        _id: false
-    }
+        rawInput: String,
+        type: String,
+        provider: String,
+        payload: mongoose.Schema.Types.Mixed,
+        lastCheckedAt: Date,
+    },
+    { _id: false }
+);
+
+const revealContextSchema = new mongoose.Schema(
+    {
+        showCreatedAt: Boolean,
+        showLocation: Boolean,
+    },
+    { _id: false }
 );
 
 const capsuleSchema = new mongoose.Schema(
     {
-        sender_id: {
+        owner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
         },
 
-        recipient_email: {
+        audience: {
             type: String,
-            required: true
+            enum: ["PRIVATE", "DIRECT", "PUBLIC"],
+            required: true,
         },
 
-        message_payload: {
-            type: String,
-            required: true
+        recipients: {
+            type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+            default: [],
         },
+
+        content: contentSchema,
+
+        media: {
+            type: Array,
+            default: [],
+        },
+
+        deliveryCondition: deliveryConditionSchema,
 
         status: {
             type: String,
-            enum: [
-                "locked",
-                "unlocked",
-                "delivered"
-            ],
-            default: "locked"
+            enum: ["DRAFT", "WAITING", "DELIVERED", "ARCHIVED"],
+            default: "WAITING",
         },
 
-        trigger: {
-            type: triggerSchema,
-            required: true
-        }
+        revealContext: revealContextSchema,
+
+        deliveredAt: Date,
     },
     {
-        timestamps: true
+        timestamps: true,
     }
 );
 

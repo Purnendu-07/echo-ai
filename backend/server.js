@@ -6,6 +6,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 
 const app = express();
+const capsuleRoutes = require("./routes/capsuleRoutes");
 
 connectDB();
 
@@ -14,6 +15,7 @@ require("./worker/evaluator");
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/capsules", capsuleRoutes);
 
 app.get("/", (req, res) => {
     res.json({
@@ -22,7 +24,6 @@ app.get("/", (req, res) => {
     });
 });
 
-app.use("/api/capsules", require("./routes/capsuleRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 
 const PORT = process.env.PORT || 5000;

@@ -5,26 +5,36 @@ exports.createCapsule = async (req, res) => {
     try {
 
         const {
-            recipient_email,
-            message_payload,
-            trigger
+            audience,
+            recipients,
+            content,
+            deliveryCondition,
+            revealContext
         } = req.body;
 
         const capsule = await Capsule.create({
 
-            sender_id: req.user._id,
+           owner: req.user._id,
 
-            recipient_email,
+            audience,
 
-            message_payload,
+            recipients,
 
-            trigger,
+            content,
 
-            status: "locked"
+            deliveryCondition,
+
+            revealContext,
+
+            status: "WAITING"
 
         });
 
-        res.status(201).json(capsule);
+        res.status(201).json({
+            success: true,
+            message: "Capsule created successfully",
+            capsule
+        });
 
     }
 
@@ -37,5 +47,56 @@ exports.createCapsule = async (req, res) => {
         });
 
     }
+
+};
+
+exports.getMyCapsules = async (req, res) => {
+
+    try {
+
+        const capsules = await Capsule.find({
+
+            owner: req.user._id
+
+        }).sort({
+
+            createdAt: -1
+
+        });
+
+        res.status(200).json({
+            success: true,
+            capsules
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            message: "Failed to fetch capsules"
+        });
+
+    }
+
+};
+
+exports.getCapsuleById = async (req, res) => {
+
+    res.status(200).json({
+        success: true,
+        message: "getCapsuleById placeholder"
+    });
+
+};
+
+exports.deleteCapsule = async (req, res) => {
+
+    res.status(200).json({
+        success: true,
+        message: "deleteCapsule placeholder"
+    });
 
 };
