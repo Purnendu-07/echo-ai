@@ -1,3 +1,4 @@
+const triggerParser = require("../utils/triggerParser");
 const Capsule = require("../models/Capsule");
 
 exports.createCapsule = async (req, res) => {
@@ -12,9 +13,14 @@ exports.createCapsule = async (req, res) => {
             revealContext
         } = req.body;
 
+        // Parse the trigger
+        const parsedTrigger = triggerParser(
+            deliveryCondition.rawInput
+        );
+
         const capsule = await Capsule.create({
 
-           owner: req.user._id,
+            owner: req.user._id,
 
             audience,
 
@@ -22,7 +28,17 @@ exports.createCapsule = async (req, res) => {
 
             content,
 
-            deliveryCondition,
+            deliveryCondition: {
+
+                rawInput: deliveryCondition.rawInput,
+
+                type: parsedTrigger.type,
+
+                provider: parsedTrigger.provider,
+
+                payload: parsedTrigger.payload
+
+            },
 
             revealContext,
 
@@ -31,9 +47,13 @@ exports.createCapsule = async (req, res) => {
         });
 
         res.status(201).json({
+
             success: true,
+
             message: "Capsule created successfully",
+
             capsule
+
         });
 
     }
@@ -43,7 +63,11 @@ exports.createCapsule = async (req, res) => {
         console.error(err);
 
         res.status(500).json({
+
+            success: false,
+
             message: "Failed to create capsule"
+
         });
 
     }
@@ -65,8 +89,11 @@ exports.getMyCapsules = async (req, res) => {
         });
 
         res.status(200).json({
+
             success: true,
+
             capsules
+
         });
 
     }
@@ -76,7 +103,11 @@ exports.getMyCapsules = async (req, res) => {
         console.error(err);
 
         res.status(500).json({
+
+            success: false,
+
             message: "Failed to fetch capsules"
+
         });
 
     }
@@ -86,8 +117,11 @@ exports.getMyCapsules = async (req, res) => {
 exports.getCapsuleById = async (req, res) => {
 
     res.status(200).json({
+
         success: true,
+
         message: "getCapsuleById placeholder"
+
     });
 
 };
@@ -95,8 +129,11 @@ exports.getCapsuleById = async (req, res) => {
 exports.deleteCapsule = async (req, res) => {
 
     res.status(200).json({
+
         success: true,
+
         message: "deleteCapsule placeholder"
+
     });
 
 };

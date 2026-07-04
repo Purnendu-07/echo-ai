@@ -1,85 +1,85 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
+
+import { createCapsule } from "../services/capsuleService";
 
 function CreateCapsule() {
 
     const navigate = useNavigate();
 
-    const [recipientEmail, setRecipientEmail] = useState("");
+    const [audience, setAudience] = useState("PRIVATE");
 
     const [message, setMessage] = useState("");
 
-    const [triggerType, setTriggerType] = useState("time");
+    const [trigger, setTrigger] = useState("");
 
-    const [unlockDate, setUnlockDate] = useState("");
+    const [showCreatedAt, setShowCreatedAt] = useState(true);
 
-    const [apiEndpoint, setApiEndpoint] = useState("");
-
-    const [targetValue, setTargetValue] = useState("");
-
-    const [conditionOperator, setConditionOperator] =
-        useState("equals");
+    const [showLocation, setShowLocation] = useState(false);
 
     const [loading, setLoading] = useState(false);
 
     const [error, setError] = useState("");
 
-    const submitCapsule = async (e) => {
+    const suggestions = [
+
+        "When RCB wins IPL",
+
+        "When India wins the Cricket World Cup",
+
+        "When GTA VI releases",
+
+        "When Bitcoin reaches $150,000",
+
+        "Tomorrow at 8 PM",
+
+        "On 1 January 2030"
+
+    ];
+
+    const handleSubmit = async (e) => {
 
         e.preventDefault();
 
-        setError("");
-
         setLoading(true);
+
+        setError("");
 
         try {
 
-            let trigger = {};
+            await createCapsule({
 
-            if (triggerType === "time") {
+                audience,
 
-                trigger = {
+                recipients: [],
 
-                    type: "time",
+                content: {
 
-                    unlock_date: unlockDate
+                    type: "TEXT",
 
-                };
+                    text: message
 
-            }
+                },
 
-            else {
+                deliveryCondition: {
 
-                trigger = {
+                    rawInput: trigger
 
-                    type: "api",
+                },
 
-                    api_endpoint: apiEndpoint,
+                revealContext: {
 
-                    target_value: targetValue,
+                    showCreatedAt,
 
-                    condition_operator: conditionOperator
+                    showLocation
 
-                };
+                }
 
-            }
+            });
 
-            const payload = {
+            alert("Capsule created successfully!");
 
-                recipient_email: recipientEmail,
-
-                message_payload: message,
-
-                trigger
-
-            };
-
-            await api.post("/api/capsules", payload);
-
-            alert("Capsule Created Successfully!");
-
-            navigate("/dashboard");
+            navigate("/feed");
 
         }
 
@@ -107,31 +107,55 @@ function CreateCapsule() {
 
                 <h1>Create Capsule</h1>
 
-                <form onSubmit={submitCapsule}>
+                <p className="subtitle">
+
+                    Lock your message until a future event happens.
+
+                </p>
+
+                <form onSubmit={handleSubmit}>
 
                     <label>
 
-                        Recipient Email
+                        Audience
 
                     </label>
 
-                    <input
+                    <select
 
-                        type="email"
-
-                        required
-
-                        value={recipientEmail}
+                        value={audience}
 
                         onChange={(e) =>
-                            setRecipientEmail(e.target.value)
+
+                            setAudience(e.target.value)
+
                         }
 
-                    />
+                    >
+
+                        <option value="PRIVATE">
+
+                            Private
+
+                        </option>
+
+                        <option value="DIRECT">
+
+                            Direct
+
+                        </option>
+
+                        <option value="PUBLIC">
+
+                            Public
+
+                        </option>
+
+                    </select>
 
                     <label>
 
-                        Message
+                        Your Message
 
                     </label>
 
@@ -139,184 +163,152 @@ function CreateCapsule() {
 
                         rows="6"
 
-                        required
+                        placeholder="Write something your future self or others will read..."
 
                         value={message}
 
                         onChange={(e) =>
+
                             setMessage(e.target.value)
+
                         }
+
+                        required
 
                     />
 
                     <label>
 
-                        Trigger Type
+                        Trigger
 
                     </label>
 
-                    <select
+                    <textarea
 
-                        value={triggerType}
+                        rows="3"
+
+                        placeholder="Example: When RCB wins IPL"
+
+                        value={trigger}
 
                         onChange={(e) =>
-                            setTriggerType(e.target.value)
+
+                            setTrigger(e.target.value)
+
                         }
 
-                    >
+                        required
 
-                        <option value="time">
+                    />
 
-                            Time Trigger
+                    <small>
 
-                        </option>
+                        Suggestions
 
-                        <option value="api">
+                    </small>
 
-                            API Trigger
+                    <div className="trigger-suggestions">
 
-                        </option>
+                        {
 
-                    </select>
+                            suggestions.map((item) => (
+
+                                <button
+
+                                    key={item}
+
+                                    type="button"
+
+                                    className="suggestion"
+
+                                    onClick={() =>
+
+                                        setTrigger(item)
+
+                                    }
+
+                                >
+
+                                    {item}
+
+                                </button>
+
+                            ))
+
+                        }
+
+                    </div>
+
+                    <label className="checkbox">
+
+                        <input
+
+                            type="checkbox"
+
+                            checked={showCreatedAt}
+
+                            onChange={(e) =>
+
+                                setShowCreatedAt(e.target.checked)
+
+                            }
+
+                        />
+
+                        Reveal creation time
+
+                    </label>
+
+                    <label className="checkbox">
+
+                        <input
+
+                            type="checkbox"
+
+                            checked={showLocation}
+
+                            onChange={(e) =>
+
+                                setShowLocation(e.target.checked)
+
+                            }
+
+                        />
+
+                        Reveal creation location
+
+                    </label>
 
                     {
 
-                        triggerType === "time"
+                        error &&
 
-                        &&
-
-                        <>
-
-                            <label>
-
-                                Unlock Date
-
-                            </label>
-
-                            <input
-
-                                type="datetime-local"
-
-                                required
-
-                                value={unlockDate}
-
-                                onChange={(e) =>
-                                    setUnlockDate(e.target.value)
-                                }
-
-                            />
-
-                        </>
-
-                    }
-
-                    {
-
-                        triggerType === "api"
-
-                        &&
-
-                        <>
-
-                            <label>
-
-                                API Endpoint
-
-                            </label>
-
-                            <input
-
-                                type="text"
-
-                                placeholder="https://example.com/api"
-
-                                value={apiEndpoint}
-
-                                onChange={(e) =>
-                                    setApiEndpoint(e.target.value)
-                                }
-
-                                required
-
-                            />
-
-                            <label>
-
-                                Target Value
-
-                            </label>
-
-                            <input
-
-                                type="text"
-
-                                value={targetValue}
-
-                                onChange={(e) =>
-                                    setTargetValue(e.target.value)
-                                }
-
-                                required
-
-                            />
-
-                            <label>
-
-                                Condition
-
-                            </label>
-
-                            <select
-
-                                value={conditionOperator}
-
-                                onChange={(e) =>
-                                    setConditionOperator(e.target.value)
-                                }
-
-                            >
-
-                                <option value="equals">
-
-                                    Equals
-
-                                </option>
-
-                                <option value="greater_than">
-
-                                    Greater Than
-
-                                </option>
-
-                                <option value="less_than">
-
-                                    Less Than
-
-                                </option>
-
-                                <option value="contains">
-
-                                    Contains
-
-                                </option>
-
-                            </select>
-
-                        </>
-
-                    }
-{error && (
                         <p className="error">
+
                             {error}
+
                         </p>
-                    )}
+
+                    }
 
                     <button
+
                         type="submit"
+
                         disabled={loading}
+
                     >
-                        {loading ? "Creating..." : "Create Capsule"}
+
+                        {
+
+                            loading
+
+                                ? "Creating..."
+
+                                : "Save Capsule"
+
+                        }
+
                     </button>
 
                 </form>
@@ -324,9 +316,17 @@ function CreateCapsule() {
                 <br />
 
                 <button
-                    onClick={() => navigate("/dashboard")}
+
+                    onClick={() =>
+
+                        navigate("/feed")
+
+                    }
+
                 >
-                    Back to Dashboard
+
+                    Back to Feed
+
                 </button>
 
             </div>

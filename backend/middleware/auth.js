@@ -3,7 +3,6 @@ const User = require("../models/User");
 
 const auth = async (req, res, next) => {
     try {
-
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -20,25 +19,16 @@ const auth = async (req, res, next) => {
             firebase_uid: decoded.uid
         });
 
-        /*
-            First login?
-            Automatically create MongoDB user
-        */
-
+        // First login -> create MongoDB user
         if (!user) {
+            const fallbackEmail = decoded.email || `${decoded.uid}@echo.local`;
 
             user = await User.create({
-
                 firebase_uid: decoded.uid,
-
-                email: decoded.email,
-
+                email: fallbackEmail,
                 display_name: decoded.name || "",
-
                 photo_url: decoded.picture || ""
-
             });
-
         }
 
         req.user = user;
@@ -47,12 +37,15 @@ const auth = async (req, res, next) => {
 
     } catch (err) {
 
+        console.error("=========== AUTH ERROR ===========");
         console.error(err);
+        console.error("Code:", err.code);
+        console.error("Message:", err.message);
+        console.error("=================================");
 
         return res.status(401).json({
-            message: "Invalid Token"
+            message: err.message || "Invalid Token"
         });
-
     }
 };
 

@@ -1,37 +1,55 @@
-import React from "react"; 
- 
-import {
-    BrowserRouter,
-    Routes,
-    Route
-} from "react-router-dom";
+import React from "react";
+
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import Feed from "./pages/Feed";
+import Chats from "./pages/Chats";
 import CreateCapsule from "./pages/CreateCapsule";
+import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
     return (
         <BrowserRouter>
             <Routes>
+                <Route path="/" element={<Login />} />
                 <Route
-                    path="/"
-                    element={<Login />}
-                />
-                <Route
-                    path="/dashboard"
+                    path="/feed"
                     element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <Feed />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/chats"
+                    element={
+                        <ProtectedRoute>
+                            <Chats />
                         </ProtectedRoute>
                     }
                 />
                 <Route
                     path="/create"
-
                     element={
                         <ProtectedRoute>
                             <CreateCapsule />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <Profile />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/profile/:username"
+                    element={
+                        <ProtectedRoute>
+                            <Profile />
                         </ProtectedRoute>
                     }
                 />
@@ -39,4 +57,5 @@ function App() {
         </BrowserRouter>
     );
 }
+
 export default App;

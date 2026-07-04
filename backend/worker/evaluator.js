@@ -1,114 +1,41 @@
 const cron = require("node-cron");
-const axios = require("axios");
-
 const Capsule = require("../models/Capsule");
-
-/*
-    Helper Function
-*/
-
-const evaluateCondition = (currentValue, targetValue, operator) => {
-
-    switch (operator) {
-
-        case "equals":
-            return currentValue == targetValue;
-
-        case "greater_than":
-            return Number(currentValue) > Number(targetValue);
-
-        case "less_than":
-            return Number(currentValue) < Number(targetValue);
-
-        case "contains":
-            return String(currentValue).includes(String(targetValue));
-
-        default:
-            return false;
-    }
-};
-
-/*
-    Main Worker
-*/
 
 const evaluateCapsules = async () => {
 
-    console.log("Running Capsule Evaluator...");
+    console.log("[Evaluator] Checking waiting capsules...");
 
     try {
 
-        const lockedCapsules = await Capsule.find({
-            status: "locked"
+        const waitingCapsules = await Capsule.find({
+            status: "WAITING"
         });
 
-        for (const capsule of lockedCapsules) {
+        const now = new Date();
 
-            const trigger = capsule.trigger;
+        for (const capsule of waitingCapsules) {
 
-            /*
-                Time Trigger
-            */
+            if (
+                capsule.deliveryCondition &&
+                capsule.deliveryCondition.type === "TIME"
+            ) {
 
-            if (trigger.type === "time") {
+                const unlockAt =
+                    capsule.deliveryCondition.payload?.unlockAt;
 
-                if (new Date() >= new Date(trigger.unlock_date)) {
+                if (!unlockAt) {
+                    continue;
+                }
 
-                    capsule.status = "unlocked";
+                if (now >= new Date(unlockAt)) {
+
+                    capsule.status = "DELIVERED";
+                    capsule.deliveredAt = now;
 
                     await capsule.save();
 
-                    console.log(`Unlocked Time Capsule: ${capsule._id}`);
-                }
-
-                continue;
-            }
-
-            /*
-                API Trigger
-            */
-
-            if (trigger.type === "api") {
-
-                try {
-
-                    const response = await axios.get(
-                        trigger.api_endpoint
-                    );
-
-                    /*
-                        Dummy Example:
-
-                        response.data.value
-
-                        Replace with the correct field
-                        depending on your API.
-                    */
-
-                    const apiValue = response.data.value;
-
-                    const matched = evaluateCondition(
-                        apiValue,
-                        trigger.target_value,
-                        trigger.condition_operator
-                    );
-
-                    if (matched) {
-
-                        capsule.status = "unlocked";
-
-                        await capsule.save();
-
-                        console.log(`Unlocked API Capsule: ${capsule._id}`);
-                    }
-
-                }
-
-                catch (err) {
-
-                    console.error(
-                        `API Error for Capsule ${capsule._id}:`,
-                        err.message
+                    console.log(
+                        `[Evaluator] Delivered capsule ${capsule._id}`
                     );
 
                 }
@@ -117,23 +44,17 @@ const evaluateCapsules = async () => {
 
         }
 
-    }
+    } catch (err) {
 
-    catch (err) {
-
-        console.error("Evaluator Error:", err);
+        console.error("[Evaluator] Error:", err);
 
     }
 
 };
 
-/*
-    Every Hour
-*/
+cron.schedule("* * * * *", async () => {
 
-cron.schedule("0 * * * *", () => {
-
-    evaluateCapsules();
+    await evaluateCapsules();
 
 });
 

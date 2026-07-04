@@ -23,7 +23,7 @@ function Login() {
                 await login(email, password);
             }
 
-            navigate("/dashboard");
+            navigate("/feed");
         } catch (err) {
             setError(err.message);
         }
@@ -32,7 +32,7 @@ function Login() {
     const handleGoogleLogin = async () => {
         try {
             await loginWithGoogle();
-            navigate("/dashboard");
+            navigate("/feed");
         } catch (err) {
             setError(err.message);
         }

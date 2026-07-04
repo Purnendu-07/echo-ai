@@ -2,86 +2,51 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
-import api from "../services/api";
 import { auth } from "../services/firebase";
+import { getMyCapsules } from "../services/capsuleService";
 
 function Dashboard() {
-
     const navigate = useNavigate();
 
-    const [sent, setSent] = useState([]);
-
-    const [received, setReceived] = useState([]);
-
-    const [activeTab, setActiveTab] = useState("sent");
-
+    const [capsules, setCapsules] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState("");
 
     useEffect(() => {
-
         fetchDashboard();
-
     }, []);
 
     const fetchDashboard = async () => {
-
         try {
-
             setLoading(true);
 
-            const res = await api.get("/api/dashboard");
+            const res = await getMyCapsules();
 
-            setSent(res.data.sent);
-
-            setReceived(res.data.received);
-
-        }
-
-        catch (err) {
-
+            setCapsules(res.data.capsules);
+        } catch (err) {
             console.error(err);
-
-            setError("Failed to load dashboard.");
-
-        }
-
-        finally {
-
+            setError("Failed to load capsules.");
+        } finally {
             setLoading(false);
-
         }
-
     };
 
     const logout = async () => {
-
         await signOut(auth);
-
         navigate("/");
-
     };
 
-    const capsules =
-        activeTab === "sent"
-            ? sent
-            : received;
-
     return (
-
         <div className="dashboard">
 
             <div className="dashboard-header">
 
-                <h1>Echo Dashboard</h1>
+                <h1>My Capsules</h1>
 
                 <div>
 
                     <button
-                        onClick={() =>
-                            navigate("/create")
-                        }
+                        onClick={() => navigate("/create")}
                     >
                         Create Capsule
                     </button>
@@ -96,161 +61,53 @@ function Dashboard() {
 
             </div>
 
-            <div className="tabs">
+            {loading && <h3>Loading...</h3>}
 
-                <button
-
-                    className={
-                        activeTab === "sent"
-                            ? "active"
-                            : ""
-                    }
-
-                    onClick={() =>
-                        setActiveTab("sent")
-                    }
-
-                >
-
-                    Sent
-
-                </button>
-
-                <button
-
-                    className={
-                        activeTab === "received"
-                            ? "active"
-                            : ""
-                    }
-
-                    onClick={() =>
-                        setActiveTab("received")
-                    }
-
-                >
-
-                    Received
-
-                </button>
-
-            </div>
-
-            {
-
-                loading &&
-
-                <h3>Loading...</h3>
-
-            }
-
-            {
-
-                error &&
-
+            {error && (
                 <p className="error">
-
                     {error}
-
                 </p>
+            )}
 
-            }
+            {!loading && capsules.length === 0 && (
+                <h3>No Capsules Found</h3>
+            )}
 
-            {
-
-                !loading && capsules.length === 0 && (
-
-                    <h3>
-
-                        No Capsules Found
-
-                    </h3>
-
-                )
-
-            }
-
-            {
-
-                !loading &&
-
+            {!loading &&
                 capsules.map((capsule) => (
-
                     <div
-
                         key={capsule._id}
-
                         className="capsule-card"
-
                     >
-
                         <h3>
-
-                            {
-
-                                activeTab === "sent"
-
-                                    ? capsule.recipient_email
-
-                                    : capsule.sender_id?.email ||
-                                      "Unknown Sender"
-
-                            }
-
+                            {capsule.content?.text || "Untitled Capsule"}
                         </h3>
 
                         <p>
-
-                            {
-
-                                capsule.message_payload
-
-                            }
-
+                            <strong>Audience:</strong>{" "}
+                            {capsule.audience}
                         </p>
 
                         <p>
-
-                            Status:
-
-                            {" "}
-
-                            <strong>
-
-                                {
-
-                                    capsule.status
-
-                                }
-
-                            </strong>
-
+                            <strong>Status:</strong>{" "}
+                            {capsule.status}
                         </p>
 
                         <p>
-
-                            Trigger:
-
-                            {" "}
-
-                            {
-
-                                capsule.trigger.type
-
-                            }
-
+                            <strong>Trigger:</strong>{" "}
+                            {capsule.deliveryCondition?.rawInput || "None"}
                         </p>
 
+                        <p>
+                            <strong>Created:</strong>{" "}
+                            {new Date(
+                                capsule.createdAt
+                            ).toLocaleString()}
+                        </p>
                     </div>
-
-                ))
-
-            }
-
+                ))}
         </div>
-
     );
-
 }
 
 export default Dashboard;
